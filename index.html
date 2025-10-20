@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anesthetic Gas Carbon Emission Calculator</title>
+    <!-- Using a more reliable Chart.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #17a2b8;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --background: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--light);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            background-color: var(--secondary);
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            width: 180px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            width: 120px;
+            margin-right: 10px;
+        }
+        
+        .input-group .unit {
+            width: 40px;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 10px;
+            color: var(--info);
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .impact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .impact-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+        }
+        
+        .impact-label {
+            flex: 1;
+        }
+        
+        .impact-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .col {
+            flex: 1;
+            padding: 0 15px;
+            min-width: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .row {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 Anesthetic Gas Carbon Emission Calculator</h1>
+            <p class="subtitle">Calculate CO₂ equivalent emissions and environmental impact of anesthetic gases</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="calculator">Calculator</div>
+            <div class="tab" data-tab="settings">Settings</div>
+        </div>
+        
+        <div class="tab-content active" id="calculator-tab">
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <h2 class="card-title">Enter Gas Amounts (kg)</h2>
+                        
+                        <div class="input-group">
+                            <label for="co2">Carbon Dioxide:</label>
+                            <input type="number" id="co2" value="1.0" step="0.1" min="0">
+                            <span class="unit">kg</span>
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP: 1 (Reference gas)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="n2o">Nitrous Oxide:</label>
+                            <input type="number" id="n2o" value="1.0" step="0.1" min="0">
+                            <span class="unit">kg</span>
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP: 273</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="desflurane">Desflurane:</label>
+                            <input type="number" id="desflurane" value="1.0" step="0.1" min="0">
+                            <span class="unit">kg</span>
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP: 2540</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="sevoflurane">Sevoflurane:</label>
+                            <input type="number" id="sevoflurane" value="1.0" step="0.1" min="0">
+                            <span class="unit">kg</span>
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP: 144</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="isoflurane">Isoflurane:</label>
+                            <input type="number" id="isoflurane" value="1.0" step="0.1" min="0">
+                            <span class="unit">kg</span>
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP: 539</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" id="calculate-btn">Calculate Emissions</button>
+                            <button class="btn btn-warning" id="reset-btn">Reset</button>
+                            <button class="btn btn-success" id="save-btn">Save Calculation</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">Calculation Results</h2>
+                        
+                        <h3 style="margin-bottom: 15px;">CO₂ Equivalent Emissions:</h3>
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <span>Carbon Dioxide:</span>
+                                <span id="result-co2">0 kg</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Nitrous Oxide:</span>
+                                <span id="result-n2o">0 kg</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Desflurane:</span>
+                                <span id="result-desflurane">0 kg</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Sevoflurane:</span>
+                                <span id="result-sevoflurane">0 kg</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Isoflurane:</span>
+                                <span id="result-isoflurane">0 kg</span>
+                            </div>
+                            <div class="result-item result-total">
+                                <span>Total CO₂ Equivalent:</span>
+                                <span id="result-total">0 kg</span>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin: 25px 0 15px;">Cost Analysis:</h3>
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <span>Carbon Dioxide Cost:</span>
+                                <span id="cost-co2">$0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Nitrous Oxide Cost:</span>
+                                <span id="cost-n2o">$0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Desflurane Cost:</span>
+                                <span id="cost-desflurane">$0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Sevoflurane Cost:</span>
+                                <span id="cost-sevoflurane">$0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Isoflurane Cost:</span>
+                                <span id="cost-isoflurane">$0</span>
+                            </div>
+                            <div class="result-item result-total">
+                                <span>Total Gas Cost:</span>
+                                <span id="cost-total">$0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>Carbon Cost (@$50/ton):</span>
+                                <span id="carbon-cost">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card">
+                        <h2 class="card-title">Emissions Breakdown</h2>
+                        <div class="chart-container">
+                            <canvas id="emissions-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">Environmental Impact</h2>
+                        
+                        <div class="impact-item">
+                            <div class="impact-icon">🚗</div>
+                            <div class="impact-label">Equivalent Car Miles:</div>
+                            <div class="impact-value" id="impact-cars">0 miles</div>
+                        </div>
+                        
+                        <div class="impact-item">
+                            <div class="impact-icon">🏠</div>
+                            <div class="impact-label">Home Energy (1 day):</div>
+                            <div class="impact-value" id="impact-homes">0 homes</div>
+                        </div>
+                        
+                        <div class="impact-item">
+                            <div class="impact-icon">🌳</div>
+                            <div class="impact-label">Tree Sequestration (10 yrs):</div>
+                            <div class="impact-value" id="impact-trees">0 trees</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="settings-tab">
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <h2 class="card-title">Emission Factors (GWP Values)</h2>
+                        <p style="margin-bottom: 20px;">Global Warming Potential (GWP) values relative to CO₂</p>
+                        
+                        <div class="input-group">
+                            <label for="factor-co2">Carbon Dioxide (CO₂):</label>
+                            <input type="number" id="factor-co2" value="1" step="0.1" min="0">
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">Reference gas (GWP = 1)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="factor-n2o">Nitrous Oxide (N₂O):</label>
+                            <input type="number" id="factor-n2o" value="273" step="0.1" min="0">
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP typically 273</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="factor-desflurane">Desflurane:</label>
+                            <input type="number" id="factor-desflurane" value="2540" step="1" min="0">
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP typically 2540</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="factor-sevoflurane">Sevoflurane:</label>
+                            <input type="number" id="factor-sevoflurane" value="144" step="1" min="0">
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP typically 144</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="factor-isoflurane">Isoflurane:</label>
+                            <input type="number" id="factor-isoflurane" value="539" step="1" min="0">
+                            <div class="tooltip">ℹ️
+                                <span class="tooltiptext">GWP typically 539</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card">
+                        <h2 class="card-title">Gas Costs ($ per kg)</h2>
+                        
+                        <div class="input-group">
+                            <label for="cost-setting-co2">Carbon Dioxide Cost:</label>
+                            <input type="number" id="cost-setting-co2" value="0.5" step="0.01" min="0">
+                            <span class="unit">$/kg</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cost-setting-n2o">Nitrous Oxide Cost:</label>
+                            <input type="number" id="cost-setting-n2o" value="2.0" step="0.01" min="0">
+                            <span class="unit">$/kg</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cost-setting-desflurane">Desflurane Cost:</label>
+                            <input type="number" id="cost-setting-desflurane" value="350.0" step="0.1" min="0">
+                            <span class="unit">$/kg</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cost-setting-sevoflurane">Sevoflurane Cost:</label>
+                            <input type="number" id="cost-setting-sevoflurane" value="280.0" step="0.1" min="0">
+                            <span class="unit">$/kg</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cost-setting-isoflurane">Isoflurane Cost:</label>
+                            <input type="number" id="cost-setting-isoflurane" value="120.0" step="0.1" min="0">
+                            <span class="unit">$/kg</span>
+                        </div>
+                        
+                        <div style="margin-top: 25px;">
+                            <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
+                            <button class="btn btn-warning" id="reset-settings-btn">Reset to Defaults</button>
+                            <button class="btn btn-success" id="apply-settings-btn">Apply Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2024 Anesthetic Gas Carbon Emission Calculator | For educational purposes</p>
+        </footer>
+    </div>
+
+    <script>
+        // Default emission factors (GWP values)
+        const defaultEmissionFactors = {
+            'CO2': 1,          // Carbon Dioxide (reference gas)
+            'N2O': 273,        // Nitrous Oxide
+            'desflurane': 2540, // Desflurane
+            'sevoflurane': 144, // Sevoflurane
+            'isoflurane': 539  // Isoflurane
+        };
+        
+        // Default gas costs ($ per kg)
+        const defaultGasCosts = {
+            'CO2': 0.50,       // Cost per kg of CO2
+            'N2O': 2.00,       // Cost per kg of N2O
+            'desflurane': 350.00, // Cost per kg of Desflurane
+            'sevoflurane': 280.00, // Cost per kg of Sevoflurane
+            'isoflurane': 120.00  // Cost per kg of Isoflurane
+        };
+        
+        // Impact factors
+        const carFactor = 0.404;   // kg CO2 per mile
+        const homeFactor = 28.5;   // kg CO2 per home per day
+        const treeFactor = 21.77;  // kg CO2 per tree over 10 years
+        const carbonPrice = 50;    // $ per ton CO2
+        
+        // Initialize current factors (can be edited by users)
+        let emissionFactors = {...defaultEmissionFactors};
+        let gasCosts = {...defaultGasCosts};
+        
+        // Chart initialization
+        let emissionsChart;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            setupEventListeners();
+            calculateEmissions();
+        });
+        
+        function initializeChart() {
+            const ctx = document.getElementById('emissions-chart').getContext('2d');
+            emissionsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['CO2', 'N2O', 'Desflurane', 'Sevoflurane', 'Isoflurane'],
+                    datasets: [{
+                        label: 'kg CO₂ Equivalent',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#666666',
+                            '#36a2eb',
+                            '#ff6384',
+                            '#4bc0c0',
+                            '#ff9f40'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'kg CO₂ Equivalent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y.toLocaleString()} kg CO₂`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
+                });
+            });
+            
+            // Calculator buttons
+            document.getElementById('calculate-btn').addEventListener('click', calculateEmissions);
+            document.getElementById('reset-btn').addEventListener('click', resetForm);
+            document.getElementById('save-btn').addEventListener('click', saveCalculation);
+            
+            // Settings buttons
+            document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+            document.getElementById('reset-settings-btn').addEventListener('click', resetSettings);
+            document.getElementById('apply-settings-btn').addEventListener('click', applySettings);
+            
+            // Auto-calculate when inputs change
+            document.querySelectorAll('#calculator-tab input').forEach(input => {
+                input.addEventListener('input', calculateEmissions);
+            });
+        }
+        
+        function calculateEmissions() {
+            try {
+                // Get input values
+                const gasValues = {
+                    'CO2': parseFloat(document.getElementById('co2').value) || 0,
+                    'N2O': parseFloat(document.getElementById('n2o').value) || 0,
+                    'desflurane': parseFloat(document.getElementById('desflurane').value) || 0,
+                    'sevoflurane': parseFloat(document.getElementById('sevoflurane').value) || 0,
+                    'isoflurane': parseFloat(document.getElementById('isoflurane').value) || 0
+                };
+                
+                // Calculate emissions
+                const emissions = {};
+                let totalEmissions = 0;
+                
+                for (const [gas, value] of Object.entries(gasValues)) {
+                    const emission = value * emissionFactors[gas];
+                    emissions[gas] = emission;
+                    totalEmissions += emission;
+                }
+                
+                // Calculate costs
+                const gasCostsCalc = {};
+                let totalGasCost = 0;
+                
+                for (const [gas, value] of Object.entries(gasValues)) {
+                    const cost = value * gasCosts[gas];
+                    gasCostsCalc[gas] = cost;
+                    totalGasCost += cost;
+                }
+                
+                // Calculate carbon cost
+                const carbonCost = (totalEmissions / 1000) * carbonPrice;
+                
+                // Update emission results
+                document.getElementById('result-co2').textContent = `${emissions.CO2.toLocaleString()} kg`;
+                document.getElementById('result-n2o').textContent = `${emissions.N2O.toLocaleString()} kg`;
+                document.getElementById('result-desflurane').textContent = `${emissions.desflurane.toLocaleString()} kg`;
+                document.getElementById('result-sevoflurane').textContent = `${emissions.sevoflurane.toLocaleString()} kg`;
+                document.getElementById('result-isoflurane').textContent = `${emissions.isoflurane.toLocaleString()} kg`;
+                document.getElementById('result-total').textContent = `${totalEmissions.toLocaleString()} kg`;
+                
+                // Update cost results
+                document.getElementById('cost-co2').textContent = `$${gasCostsCalc.CO2.toFixed(2)}`;
+                document.getElementById('cost-n2o').textContent = `$${gasCostsCalc.N2O.toFixed(2)}`;
+                document.getElementById('cost-desflurane').textContent = `$${gasCostsCalc.desflurane.toFixed(2)}`;
+                document.getElementById('cost-sevoflurane').textContent = `$${gasCostsCalc.sevoflurane.toFixed(2)}`;
+                document.getElementById('cost-isoflurane').textContent = `$${gasCostsCalc.isoflurane.toFixed(2)}`;
+                document.getElementById('cost-total').textContent = `$${totalGasCost.toFixed(2)}`;
+                document.getElementById('carbon-cost').textContent = `$${carbonCost.toFixed(2)}`;
+                
+                // Update impacts
+                updateImpacts(totalEmissions);
+                
+                // Update chart
+                updateChart([
+                    emissions.CO2,
+                    emissions.N2O,
+                    emissions.desflurane,
+                    emissions.sevoflurane,
+                    emissions.isoflurane
+                ]);
+                
+            } catch (error) {
+                console.error('Calculation error:', error);
+                alert(`Calculation error: Please check your inputs`);
+            }
+        }
+        
+        function updateImpacts(totalEmissions) {
+            const equivalentCars = totalEmissions / carFactor;
+            const equivalentHomes = totalEmissions / homeFactor;
+            const equivalentTrees = totalEmissions / treeFactor;
+            
+            document.getElementById('impact-cars').textContent = `${equivalentCars.toLocaleString()} miles`;
+            document.getElementById('impact-homes').textContent = `${equivalentHomes.toLocaleString()} homes`;
+            document.getElementById('impact-trees').textContent = `${equivalentTrees.toLocaleString()} trees`;
+        }
+        
+        function updateChart(emissions) {
+            emissionsChart.data.datasets[0].data = emissions;
+            emissionsChart.update();
+        }
+        
+        function resetForm() {
+            // Reset input values to defaults
+            document.getElementById('co2').value = '1.0';
+            document.getElementById('n2o').value = '1.0';
+            document.getElementById('desflurane').value = '1.0';
+            document.getElementById('sevoflurane').value = '1.0';
+            document.getElementById('isoflurane').value = '1.0';
+            
+            // Recalculate
+            calculateEmissions();
+        }
+        
+        function saveCalculation() {
+            const totalEmissions = document.getElementById('result-total').textContent;
+            const totalCost = document.getElementById('cost-total').textContent;
+            
+            alert(`Calculation saved!\nTotal Emissions: ${totalEmissions}\nTotal Cost: ${totalCost}`);
+            // In a real application, you would save to localStorage or a database
+        }
+        
+        function saveSettings() {
+            try {
+                // Update emission factors
+                emissionFactors.CO2 = parseFloat(document.getElementById('factor-co2').value);
+                emissionFactors.N2O = parseFloat(document.getElementById('factor-n2o').value);
+                emissionFactors.desflurane = parseFloat(document.getElementById('factor-desflurane').value);
+                emissionFactors.sevoflurane = parseFloat(document.getElementById('factor-sevoflurane').value);
+                emissionFactors.isoflurane = parseFloat(document.getElementById('factor-isoflurane').value);
+                
+                // Update gas costs
+                gasCosts.CO2 = parseFloat(document.getElementById('cost-setting-co2').value);
+                gasCosts.N2O = parseFloat(document.getElementById('cost-setting-n2o').value);
+                gasCosts.desflurane = parseFloat(document.getElementById('cost-setting-desflurane').value);
+                gasCosts.sevoflurane = parseFloat(document.getElementById('cost-setting-sevoflurane').value);
+                gasCosts.isoflurane = parseFloat(document.getElementById('cost-setting-isoflurane').value);
+                
+                alert('Settings saved successfully!');
+                // Recalculate with new settings
+                calculateEmissions();
+                
+            } catch (error) {
+                alert('Error: Please enter valid numbers for all settings');
+            }
+        }
+        
+        function applySettings() {
+            try {
+                // Temporarily update emission factors
+                const tempFactors = {
+                    CO2: parseFloat(document.getElementById('factor-co2').value),
+                    N2O: parseFloat(document.getElementById('factor-n2o').value),
+                    desflurane: parseFloat(document.getElementById('factor-desflurane').value),
+                    sevoflurane: parseFloat(document.getElementById('factor-sevoflurane').value),
+                    isoflurane: parseFloat(document.getElementById('factor-isoflurane').value)
+                };
+                
+                // Temporarily update gas costs
+                const tempCosts = {
+                    CO2: parseFloat(document.getElementById('cost-setting-co2').value),
+                    N2O: parseFloat(document.getElementById('cost-setting-n2o').value),
+                    desflurane: parseFloat(document.getElementById('cost-setting-desflurane').value),
+                    sevoflurane: parseFloat(document.getElementById('cost-setting-sevoflurane').value),
+                    isoflurane: parseFloat(document.getElementById('cost-setting-isoflurane').value)
+                };
+                
+                emissionFactors = tempFactors;
+                gasCosts = tempCosts;
+                
+                alert('Settings applied temporarily!');
+                // Recalculate with new settings
+                calculateEmissions();
+                
+            } catch (error) {
+                alert('Error: Please enter valid numbers for all settings');
+            }
+        }
+        
+        function resetSettings() {
+            // Reset emission factors to defaults
+            document.getElementById('factor-co2').value = defaultEmissionFactors.CO2;
+            document.getElementById('factor-n2o').value = defaultEmissionFactors.N2O;
+            document.getElementById('factor-desflurane').value = defaultEmissionFactors.desflurane;
+            document.getElementById('factor-sevoflurane').value = defaultEmissionFactors.sevoflurane;
+            document.getElementById('factor-isoflurane').value = defaultEmissionFactors.isoflurane;
+            
+            // Reset gas costs to defaults
+            document.getElementById('cost-setting-co2').value = defaultGasCosts.CO2;
+            document.getElementById('cost-setting-n2o').value = defaultGasCosts.N2O;
+            document.getElementById('cost-setting-desflurane').value = defaultGasCosts.desflurane;
+            document.getElementById('cost-setting-sevoflurane').value = defaultGasCosts.sevoflurane;
+            document.getElementById('cost-setting-isoflurane').value = defaultGasCosts.isoflurane;
+            
+            alert('Settings reset to defaults!');
+        }
+    </script>
+</body>
+</html>
